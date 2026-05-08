@@ -11,6 +11,7 @@ env:
   REPOSITORY: saferx
   CLUSTER_NAME: saferx-cluster
   NAMESPACE: saferx
+  USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
 
 jobs:
   build-and-deploy:
@@ -27,6 +28,8 @@ jobs:
 
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: gke-gcloud-auth-plugin
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
