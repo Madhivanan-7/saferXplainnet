@@ -139,6 +139,45 @@ npm run dev
 Frontend runs at:
 http://localhost:5173
 
+## DevOps & Deployment
+
+SafeRx ExplainNet is containerized and deployed on Google Kubernetes Engine.
+
+### Architecture
+
+```text
+GitHub
+  ↓
+GitHub Actions CI/CD
+  ↓
+Docker Build
+  ↓
+Google Artifact Registry
+  ↓
+GKE Kubernetes Cluster
+  ↓
+GCE Ingress + Google Managed Certificate
+  ↓
+https://saferxplain.online
+
+Deployed Components
+React frontend served with Nginx
+FastAPI backend running on Uvicorn
+Docker images stored in Google Artifact Registry
+Kubernetes Deployments and Services for frontend/backend
+GCE Ingress for routing / to frontend and /api to backend
+Google Managed Certificate for HTTPS
+GitHub Actions for CI/CD automation
+Prometheus and Grafana for Kubernetes monitoring
+Kubernetes/GKE logs for runtime debugging
+Monitoring
+
+SafeRx uses kube-prometheus-stack with Prometheus and Grafana to monitor Kubernetes workload health, pod readiness, restarts, and resource requests/limits.
+
+CI/CD
+
+On every push to main, GitHub Actions builds frontend and backend Docker images, pushes them to Google Artifact Registry, and updates the GKE deployments.
+
 Important Security Note
 
 The Google Cloud service account key is not included in this repository.
