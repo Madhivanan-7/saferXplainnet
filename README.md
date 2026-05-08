@@ -1,3 +1,4 @@
+
 # SafeRxplainNet
 
 SafeRx ExplainNet is an AI-powered prescription explanation system that helps users understand medicines from prescription images or direct medicine search.
@@ -19,6 +20,9 @@ The system extracts prescription text using OCR, detects medicine-related entiti
 ### Medicine Search
 <img src="https://github.com/user-attachments/assets/57b545cc-0513-42e3-aa9c-75e445b8aad2" width="720" alt="Medicine search result" />
 
+### Conference Certificate
+
+<img width="720"  alt="cert1" src="https://github.com/user-attachments/assets/166e1cdd-d77a-4c44-aff3-8a57156dcce2" />
 
 ---
 
