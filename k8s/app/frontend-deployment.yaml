@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saferx-frontend
+  namespace: saferx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: saferx-frontend
+  template:
+    metadata:
+      labels:
+        app: saferx-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: asia-south1-docker.pkg.dev/saferx-65/saferx/frontend:v1
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"

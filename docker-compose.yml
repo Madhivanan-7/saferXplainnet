@@ -1,0 +1,23 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: saferx-backend
+    ports:
+      - "8000:8000"
+    environment:
+      USE_PREMIUM_OCR: "true"
+      GOOGLE_APPLICATION_CREDENTIALS: "/secrets/google-vision-key.json"
+    volumes:
+      - ./backend/google-vision-key.json:/secrets/google-vision-key.json:ro
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE: "http://localhost:8000"
+    container_name: saferx-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend

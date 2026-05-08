@@ -1,0 +1,9 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: saferx-managed-cert
+  namespace: saferx
+spec:
+  domains:
+    - saferxplain.online
+    - www.saferxplain.online

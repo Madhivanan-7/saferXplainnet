@@ -1,0 +1,16 @@
+venv/
+__pycache__/
+*.pyc
+.env
+google-vision-key.json
+
+.cache/
+.huggingface/
+models/
+*.pt
+*.pth
+*.bin
+
+.DS_Store
+Thumbs.db
+*.log

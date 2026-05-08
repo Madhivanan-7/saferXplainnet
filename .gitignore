@@ -13,3 +13,7 @@ frontend/.env.local
 *.log
 .DS_Store
 Thumbs.db
+
+github-actions-key.json
+google-vision-key.json
+**/google-vision-key.json

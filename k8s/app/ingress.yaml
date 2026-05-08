@@ -1,0 +1,44 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: saferx-ingress
+  namespace: saferx
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    networking.gke.io/managed-certificates: saferx-managed-cert
+spec:
+  rules:
+    - host: saferxplain.online
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: saferx-backend-service
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: saferx-frontend-service
+                port:
+                  number: 80
+    - host: www.saferxplain.online
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: saferx-backend-service
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: saferx-frontend-service
+                port:
+                  number: 80

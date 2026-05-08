@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import BorderGlow from "./components/BorderGlow";
+const isLocalDev =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1" ||
+  window.location.port === "5173";
 
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  (isLocalDev
+    ? `http://${window.location.hostname}:8000`
+    : `${window.location.origin}/api`);
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UploadCloud,
@@ -87,6 +96,9 @@ const [language, setLanguage] = useState("en");
   const [sloganIndex, setSloganIndex] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResult, setSearchResult] = useState(null);
+  const [showOcrText, setShowOcrText] = useState(false);
+  const prescriptionResultRef = useRef(null);
+const searchResultRef = useRef(null);
 
  useEffect(() => {
   const timer = setInterval(() => {
@@ -129,11 +141,18 @@ const clearSelectedFile = () => {
     try {
       setLoading(true);
 
-      const res = await axios.post("http://127.0.0.1:8000/analyze", formData, {
+      const res = await axios.post(`${API_BASE}/analyze`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       setResult(res.data);
+
+setTimeout(() => {
+  prescriptionResultRef.current?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+}, 150);
     } catch (err) {
       alert("Backend not reachable. Make sure FastAPI is running.");
     } finally {
@@ -146,7 +165,7 @@ const searchMedicine = async () => {
 
   try {
     const res = await axios.get(
-      `http://127.0.0.1:8000/medicine/${encodeURIComponent(searchTerm.trim())}`
+      `${API_BASE}/medicine/${encodeURIComponent(searchTerm.trim())}`
     );
 
     if (!res.data.found) {
@@ -158,11 +177,18 @@ const searchMedicine = async () => {
     const med = res.data.result;
 
     setSearchResult({
-      medicine: med.medicine,
-      used_for: med.used_for,
-      side_effects: med.side_effects,
-      safety: med.safety,
-    });
+  medicine: med.medicine,
+  used_for: med.used_for,
+  side_effects: med.side_effects,
+  safety: med.safety,
+});
+
+setTimeout(() => {
+  searchResultRef.current?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+}, 150);
   } catch (err) {
     alert("Backend search not reachable. Make sure FastAPI is running.");
   }
@@ -180,7 +206,7 @@ const speakWithGoogleTTS = async (text, language = "en", key = "voice") => {
     window.speechSynthesis.cancel();
     setSpeakingKey(key);
 
-    const res = await axios.post("http://127.0.0.1:8000/tts", {
+    const res = await axios.post(`${API_BASE}/tts`, {
       text,
       language,
     });
@@ -280,7 +306,7 @@ const buildTamilSummary = (med) => {
   <div className="absolute inset-0 bg-[linear-gradient(rgba(34,211,238,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(168,85,247,0.04)_1px,transparent_1px)] bg-[size:72px_72px]" />
 
       
-      <section className="relative z-10 px-6 py-10 max-w-7xl mx-auto">
+      <section className="relative z-10 px-4 sm:px-6 py-8 sm:py-10 max-w-7xl mx-auto">
         <nav className="flex items-center justify-between mb-14">
           <div className="flex items-center gap-3">
            <div className="h-11 w-11 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center shadow-2xl">
@@ -313,7 +339,7 @@ const buildTamilSummary = (med) => {
   <motion.div
     initial={{ opacity: 0, scale: 0.96 }}
     animate={{ opacity: 1, scale: 1 }}
-    className="rounded-[2rem] p-5"
+    className="rounded-[2rem] p-4 sm:p-5"
   >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-sm text-cyan-100 mb-6">
               <Sparkles size={16} />
@@ -342,7 +368,7 @@ const buildTamilSummary = (med) => {
               </AnimatePresence>
             </div>
 
-            <p className="mt-4 text-lg text-white/60 max-w-xl leading-relaxed">
+           <p className="mt-4 text-base sm:text-lg text-white/60 max-w-xl leading-relaxed">
               Upload a prescription or search a medicine directly. SafeRx turns
               confusing medical text into simple, patient-friendly guidance.
             </p>
@@ -470,15 +496,15 @@ const buildTamilSummary = (med) => {
                   initial={{ opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -14 }}
-                  className="rounded-[1.5rem] bg-black/30 border border-white/10 p-6"
+                 className="rounded-[1.5rem] bg-black/30 border border-white/10 p-5 sm:p-6"
                 >
-                  <div className="flex items-center gap-3 px-4 h-16 rounded-2xl bg-white/10 border border-white/15 focus-within:border-cyan-300/60 transition">
+                  <div className="flex items-center gap-3 px-4 h-14 sm:h-16 rounded-2xl bg-white/10 border border-white/15 focus-within:border-cyan-300/60 transition">
                     <Search className="text-cyan-300" />
                     <input
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search any medicine..."
-                      className="bg-transparent outline-none w-full text-lg placeholder:text-white/35"
+                      placeholder="Search medicine..."
+                      className="bg-transparent outline-none w-full min-w-0 text-base sm:text-lg placeholder:text-white/35"
                     />
                   </div>
 
@@ -490,9 +516,7 @@ const buildTamilSummary = (med) => {
                     <ArrowRight size={18} />
                   </button>
 
-                  <p className="mt-4 text-sm text-white/45">
-                    Search mode UI is ready. Backend connection comes next.
-                  </p>
+                  
                 </motion.div>
               )}
             </AnimatePresence>
@@ -500,15 +524,17 @@ const buildTamilSummary = (med) => {
           </BorderGlow>
         </div>
 
-       {searchResult && mode === "search" && (
-  <section className="mt-16">
-    <div className="flex items-center justify-between mb-6">
-      <h3 className="text-3xl font-black">Medicine Search Result</h3>
+      {searchResult && mode === "search" && (
+ <section ref={searchResultRef} className="mt-12 sm:mt-16 scroll-mt-6">
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <h3 className="text-3xl sm:text-4xl font-black leading-tight">
+        Medicine Search Result
+      </h3>
 
-      <div className="flex gap-2 rounded-2xl bg-white/10 border border-white/10 p-1">
+      <div className="w-full sm:w-auto flex gap-2 rounded-2xl bg-white/10 border border-white/10 p-1">
         <button
           onClick={() => setLanguage("en")}
-          className={`px-4 py-2 rounded-xl font-bold transition ${
+          className={`flex-1 sm:flex-none sm:min-w-[120px] px-4 py-3 rounded-xl font-bold transition ${
             language === "en" ? "bg-white text-black" : "text-white/60"
           }`}
         >
@@ -517,7 +543,7 @@ const buildTamilSummary = (med) => {
 
         <button
           onClick={() => setLanguage("ta")}
-          className={`px-4 py-2 rounded-xl font-bold transition ${
+          className={`flex-1 sm:flex-none sm:min-w-[120px] px-4 py-3 rounded-xl font-bold transition ${
             language === "ta" ? "bg-white text-black" : "text-white/60"
           }`}
         >
@@ -527,28 +553,33 @@ const buildTamilSummary = (med) => {
     </div>
 
     <MedicineCard
-  med={searchResult}
-  speak={speak}
-  speakWithGoogleTTS={speakWithGoogleTTS}
-  buildSummary={buildSummary}
-  buildTamilSummary={buildTamilSummary}
-  language={language}
-  speakingKey={speakingKey}
-/>
-          </section>
-        )}
+      med={searchResult}
+      speak={speak}
+      speakWithGoogleTTS={speakWithGoogleTTS}
+      buildSummary={buildSummary}
+      buildTamilSummary={buildTamilSummary}
+      language={language}
+      speakingKey={speakingKey}
+    />
+  </section>
+)}
 
         {result && (
-          <motion.section initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="mt-16">
-            <div className="rounded-[2rem] bg-white/10 border border-white/15 backdrop-blur-2xl p-6 mb-8">
-              <div className="flex flex-wrap items-center justify-between gap-4">
+         <motion.section
+  ref={prescriptionResultRef}
+  initial={{ opacity: 0, y: 24 }}
+  animate={{ opacity: 1, y: 0 }}
+  className="mt-16 scroll-mt-6"
+>
+           <div className="rounded-[2rem] bg-white/10 border border-white/15 backdrop-blur-2xl p-5 sm:p-6 mb-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <p className="text-white/50 text-sm">OCR Engine</p>
-                  <h3 className="text-2xl font-bold">{result.ocr_engine}</h3>
+                  <h3 className="text-2xl sm:text-2xl font-bold">{result.ocr_engine}</h3>
                 </div>
 
                 <div
-                  className={`px-5 py-3 rounded-full font-bold ${
+                  className={`self-start sm:self-auto px-4 sm:px-5 py-2 sm:py-3 rounded-full text-sm sm:text-base font-bold ${
                     result.confidence === "high"
                       ? "bg-emerald-400/15 text-emerald-300"
                       : result.confidence === "medium"
@@ -563,13 +594,13 @@ const buildTamilSummary = (med) => {
               <p className="mt-5 text-sm text-white/60">{result.warning}</p>
             </div>
 
-            <div className="flex items-center justify-between mb-6">
-  <h3 className="text-3xl font-black">Medicine Intelligence</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+  <h3 className="text-3xl font-black leading-tight">Medicine Intelligence</h3>
 
-  <div className="flex gap-2 rounded-2xl bg-white/10 border border-white/10 p-1">
+  <div className="w-full sm:w-auto flex gap-2 rounded-2xl bg-white/10 border border-white/10 p-1">
     <button
       onClick={() => setLanguage("en")}
-      className={`px-4 py-2 rounded-xl font-bold transition ${
+      className={`flex-1 sm:flex-none min-w-[120px] px-4 py-2 rounded-xl font-bold transition ${
         language === "en" ? "bg-white text-black" : "text-white/60"
       }`}
     >
@@ -577,7 +608,7 @@ const buildTamilSummary = (med) => {
     </button>
     <button
       onClick={() => setLanguage("ta")}
-      className={`px-4 py-2 rounded-xl font-bold transition ${
+      className={`flex-1 sm:flex-none min-w-[120px] px-4 py-2 rounded-xl font-bold transition ${
         language === "ta" ? "bg-white text-black" : "text-white/60"
       }`}
     >
@@ -608,10 +639,32 @@ const buildTamilSummary = (med) => {
               </div>
             )}
 
-            <div className="mt-8 rounded-[2rem] bg-black/35 border border-white/10 p-6">
-              <p className="text-white/45 text-sm mb-3">Extracted OCR Text</p>
-              <pre className="whitespace-pre-wrap text-white/70 text-sm">{result.extracted_text}</pre>
-            </div>
+         <div className="mt-8 rounded-[2rem] bg-black/35 border border-white/10 overflow-hidden">
+  <button
+    type="button"
+    onClick={() => setShowOcrText((prev) => !prev)}
+    className="w-full px-6 py-6 flex items-center justify-between text-left hover:bg-white/5 transition"
+  >
+    <div className="pr-6">
+      <p className="text-white/80 font-bold">Extracted OCR Text</p>
+      <p className="text-white/40 text-sm mt-1">
+        {showOcrText ? "Hide raw prescription text" : "View raw prescription text"}
+      </p>
+    </div>
+
+    <span className="text-cyan-300 text-xl font-bold shrink-0 px-3">
+      {showOcrText ? "−" : "+"}
+    </span>
+  </button>
+
+  {showOcrText && (
+    <div className="px-6 pt-3 pb-6">
+      <pre className="whitespace-pre-wrap text-white/70 text-sm leading-relaxed">
+        {result.extracted_text}
+      </pre>
+    </div>
+  )}
+</div>
           </motion.section>
         )}
       </section>
@@ -651,11 +704,11 @@ function MedicineCard({
 
       const tamilName = await tamilTranslate(med.medicine);
 
-      setTranslated({
-        medicine: `${med.medicine} (${tamilName})`,
-        used_for,
-        side_effects,
-      });
+    setTranslated({
+  medicineTamil: tamilName,
+  used_for,
+  side_effects,
+});
     };
 
     translateAll();
@@ -668,12 +721,21 @@ function MedicineCard({
 const isSearchOnly = med.dose === undefined;
 const voiceKey = `${med.medicine}-${language}`;
 const isSpeaking = speakingKey === voiceKey;
-const displayMedicine = translated?.medicine || med.medicine;
+const displayMedicine =
+  language === "ta" && translated?.medicineTamil
+    ? `${med.medicine} (${translated.medicineTamil})`
+    : med.medicine;
+
+const displayMedicineTamil = translated?.medicineTamil;
 const displayUsedFor = translated?.used_for || med.used_for;
 const displaySideEffects = translated?.side_effects || med.side_effects;
 
 const displayDose =
-  language === "ta" ? translateDose(med.dose) : med.dose;
+  language === "ta"
+    ? med.dose === "Not clearly detected"
+      ? "மருத்துவர் கூறியபடி"
+      : translateDose(med.dose)
+    : med.dose;
 
 const displayFrequency =
   language === "ta" ? translateFrequency(med.frequency) : med.frequency;
@@ -685,7 +747,7 @@ const displaySummary = isSearchOnly
   : language === "ta"
     ? `${med.medicine} ${
         displayDose !== "Not clearly detected" ? displayDose : ""
-      } மாத்திரையை ${displayFrequency} ${
+      } மருந்தை ${displayFrequency} ${
         med.duration !== "Not clearly detected"
           ? `${translateDuration(med.duration)} வரை`
           : ""
@@ -699,7 +761,7 @@ const voiceSummary = isSearchOnly
   : language === "ta"
     ? `${med.medicine} ${
         translateDoseForVoice(med.dose)
-      } மாத்திரையை ${displayFrequency} ${
+      } மருந்தை ${displayFrequency} ${
         med.duration !== "Not clearly detected"
           ? `${translateDuration(med.duration)} வரை`
           : ""
@@ -721,13 +783,26 @@ const safetyText =
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-[2rem] bg-white/10 border border-white/15 backdrop-blur-xl p-6 shadow-2xl hover:-translate-y-1 transition"
+     className="rounded-[2rem] bg-white/10 border border-white/15 backdrop-blur-xl p-5 sm:p-6 shadow-2xl hover:-translate-y-1 transition"
     >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-cyan-300 text-sm font-semibold">Medicine</p>
-          <h4 className="text-3xl font-black mt-1">{displayMedicine}</h4>
-        </div>
+     <div className="flex items-start justify-between gap-3">
+  <div className="min-w-0 flex-1 pr-2">
+    <p className="text-cyan-300 text-sm font-semibold">Medicine</p>
+
+    <h4 className="hidden sm:block text-3xl font-black mt-1 break-words leading-tight">
+      {displayMedicine}
+    </h4>
+
+    <h4 className="block sm:hidden text-3xl font-black mt-1 break-words leading-tight">
+      {med.medicine}
+    </h4>
+
+    {language === "ta" && displayMedicineTamil && (
+      <p className="block sm:hidden mt-1 text-white text-2xl font-black break-words leading-tight">
+        ({displayMedicineTamil})
+      </p>
+    )}
+  </div>
 
    <button
  onClick={() =>
@@ -737,7 +812,7 @@ speakWithGoogleTTS(
   voiceKey
 )
 }
-  className={`h-12 w-12 rounded-2xl border flex items-center justify-center transition ${
+  className={`shrink-0 h-12 w-12 rounded-2xl border flex items-center justify-center transition ${
     isSpeaking
       ? "bg-cyan-400/20 border-cyan-300 shadow-[0_0_24px_rgba(34,211,238,0.45)]"
       : "bg-white/10 border-white/15 hover:bg-white/15"
@@ -750,7 +825,7 @@ speakWithGoogleTTS(
 </button>
       </div>
        {!isSearchOnly && (
-      <div className="grid grid-cols-3 gap-3 mt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
        <Info label={language === "ta" ? "அளவு" : "Dose"} value={displayDose} />  
 <Info
   label={language === "ta" ? "எத்தனை முறை" : "Frequency"}
@@ -767,7 +842,7 @@ speakWithGoogleTTS(
         <p className="text-white/45 text-xs uppercase tracking-widest">
           Patient-friendly instruction
         </p>
-        <p className="mt-2 text-lg font-semibold text-white/90">
+        <p className="mt-2 text-base sm:text-lg font-semibold text-white/90 leading-relaxed">
         {displaySummary}
         </p>
       </div>
@@ -775,7 +850,7 @@ speakWithGoogleTTS(
 
       <div className="mt-5">
         <p className="text-white/45 text-sm">{usedForLabel}</p>
-        <p className="mt-1 text-white/85">{displayUsedFor}</p>
+        <p className="mt-1 text-white/85 text-base leading-relaxed">{displayUsedFor}</p>
       </div>
 
       <div className="mt-5">
@@ -784,7 +859,7 @@ speakWithGoogleTTS(
           {displaySideEffects.map((s, i) => (
             <span
               key={i}
-              className="px-3 py-1 rounded-full bg-violet-400/10 text-violet-200 border border-violet-300/10 text-sm"
+              className="px-3 py-1 rounded-full bg-violet-400/10 text-violet-200 border border-violet-300/10 text-sm leading-snug"
             >
               {s}
             </span>
@@ -799,9 +874,11 @@ speakWithGoogleTTS(
 
 function Info({ label, value }) {
   return (
-    <div className="rounded-2xl bg-black/30 border border-white/10 p-3">
+    <div className="rounded-2xl bg-black/30 border border-white/10 p-4 sm:p-3">
       <p className="text-white/40 text-xs">{label}</p>
-      <p className="text-white font-bold mt-1 text-sm">{value}</p>
+      <p className="text-white font-bold mt-1 text-base sm:text-sm leading-snug break-words">
+        {value}
+      </p>
     </div>
   );
 }

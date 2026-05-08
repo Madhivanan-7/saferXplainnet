@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saferx-backend
+  namespace: saferx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: saferx-backend
+  template:
+    metadata:
+      labels:
+        app: saferx-backend
+    spec:
+      containers:
+        - name: backend
+          image: asia-south1-docker.pkg.dev/saferx-65/saferx/backend:v1
+          ports:
+            - containerPort: 8000
+          env:
+            - name: USE_PREMIUM_OCR
+              value: "true"
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "/secrets/google-vision-key.json"
+          volumeMounts:
+            - name: google-key
+              mountPath: /secrets
+              readOnly: true
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+      volumes:
+        - name: google-key
+          secret:
+            secretName: google-vision-key

@@ -1,0 +1,15 @@
+.git
+.github
+
+backend/venv
+backend/__pycache__
+backend/*.pyc
+backend/.env
+backend/google-vision-key.json
+
+frontend/node_modules
+frontend/dist
+frontend/.env
+frontend/.env.local
+
+*.log

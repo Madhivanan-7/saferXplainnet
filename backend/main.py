@@ -3,7 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, ImageFilter, ImageOps
 import pytesseract
 import io
-from transformers import pipeline
+try:
+    from transformers import pipeline
+except Exception:
+    pipeline = None
 import re
 from google.cloud import vision
 import os
@@ -19,7 +22,8 @@ translate_client = translate.Client()
 
 load_dotenv()
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+if os.name == "nt":
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 app = FastAPI(title="SafeRx ExplainNet API")
 
@@ -53,6 +57,10 @@ ner_pipeline = None
 
 def get_ner_pipeline():
     global ner_pipeline
+
+    if pipeline is None:
+        print("Biomedical NER disabled: transformers not installed")
+        return None
 
     if ner_pipeline is None:
         print("Loading biomedical NER model...")
@@ -295,8 +303,11 @@ def extract_medicines(text):
 def extract_ai_entities(text):
     try:
         ner = get_ner_pipeline()
-        entities = ner(text[:1500])
 
+        if ner is None:
+            return []
+
+        entities = ner(text[:1500])
         results = []
 
         for ent in entities:
@@ -369,6 +380,7 @@ def search_medicine_by_name(name):
     }
 
 @app.post("/tts")
+@app.post("/api/tts")
 def generate_tts(request: TTSRequest):
     try:
         client = texttospeech.TextToSpeechClient()
@@ -411,12 +423,19 @@ def generate_tts(request: TTSRequest):
             "success": False,
             "message": "Text-to-speech failed"
         }
-        
-            
+
+
 @app.get("/")
 def home():
     return {"message": "SafeRx ExplainNet Backend Running"}
+
+@app.get("/api")
+@app.get("/api/")
+def api_home():
+    return {"message": "SafeRx ExplainNet Backend Running"}
+
 @app.get("/medicine/{medicine_name}")
+@app.get("/api/medicine/{medicine_name}")
 def get_medicine_details(medicine_name: str):
     result = search_medicine_by_name(medicine_name)
 
@@ -431,6 +450,7 @@ def get_medicine_details(medicine_name: str):
         "result": result
     }
 @app.post("/analyze")
+@app.post("/api/analyze")
 async def analyze_prescription(file: UploadFile = File(...),language: str = "en"):
     image_bytes = await file.read()
     print("LANG RECEIVED:", language)
