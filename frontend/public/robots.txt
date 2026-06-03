@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://saferxplain.online/sitemap.xml
